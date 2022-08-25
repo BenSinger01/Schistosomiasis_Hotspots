@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "Model,Trainset,Outcome,Metric,Score" >> $folder"evaluate_w_voting.csv"
+for model in EnsembleRegressor LinearRegression RandomForestRegressor GradientBoostingRegressor EnsembleClassifier LogisticRegression RandomForestClassifier GradientBoostingClassifier ElasticNetLinear ElasticNetLogistic; do for trainset in NIG KEN TAN Sm Sh all_NIG all_COTKEN all_KENTAN all_TANCOT; do for outcome in Intensity Prevalence Relative; do for metric in Accuracy Sensitivity Specificity Balanced; do echo -n $model","$trainset","$outcome","$metric"," >> $folder"evaluate_w_voting.csv"; python evaluate.py $model $trainset $outcome $metric $folder "" "" >> $folder"evaluate_w_voting.csv"; done; done; done; done
