@@ -10,5 +10,6 @@ do
 	python3 $model "" "" ""
 done
 python3 ensemble.py "" "" ""
+folder=""
 export folder
 bash run_evaluate.bash
