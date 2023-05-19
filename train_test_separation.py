@@ -4,7 +4,7 @@ import sys
 
 folder, seed = sys.argv[1], int(sys.argv[2])
 
-all_data = pd.read_csv("Data/all_hotspot_prediction_data.csv",index_col=[0])
+all_data = pd.read_csv("all_hotspot_prediction_data.csv",index_col=[0])
 # np.random.seed(220516)
 
 np.random.seed(seed)
