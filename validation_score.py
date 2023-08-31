@@ -2,7 +2,7 @@ import numpy as np
 from sklearn import metrics
 
 def validation_score(y_true,y_pred,target):
-	if target=="Prevalence Outcome":
+	if target=="Prevalence Outcome" or target=="True Prevalence Outcome":
 		true_hotspots = y_true>.1
 		pred_hotspots = y_pred>.1
 	if target=="Intensity Outcome":
