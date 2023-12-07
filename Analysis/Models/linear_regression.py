@@ -12,27 +12,37 @@ import validation_score
 
 np.random.seed(230803)
 
+# load control variables from command line
 folder, var, val, validation_approach, plot = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], bool(int(sys.argv[5]))
 reg_targets=["Prevalence Outcome"]
 if var == "true_":
 	reg_targets = ["True Prevalence Outcome","Prevalence Outcome"]
-
 variable_func = eval('variable_func.'+var+'variable_func')
 validation_score = eval('validation_score.'+val+'validation_score')
 
 parsimony_bias = 0.01
 
+# select, train, and save linear regression models
+# iterate over train sets (and corresponding test sets)
 for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 ,"all_COTKEN","all_KENTAN","all_TANCOT"]:
-	data = pd.read_csv(folder+"Data/"+validation_approach+"Train_Data/"+trainset+".csv")
+
+	# load data and variables
+	data = pd.read_csv(folder+validation_approach+"Train_Data/"+trainset+".csv")
 	country_indicator =\
 	 [item==data["Country_Code"].iloc[0] for item in data["Country_Code"]]
 	variables = variable_func(trainset)
 	X_unscaled = data[variables]
-	with open(folder+"Data/"+validation_approach+"Train_Data/"+trainset+"_"+var+"scaler.pickle",'rb') as pklfile:
+
+	# scale variables
+	with open(folder+validation_approach+"Train_Data/"+trainset+"_"+var+"scaler.pickle",'rb') as pklfile:
 		scaler = pkl.load(pklfile)
 	X = scaler.transform(X_unscaled)
+
+	# select model for each hotspot definition
 	for target in reg_targets:
+
+		# load and initialize variables
 		y = np.array(data[target])
 		scorer = metrics.make_scorer(validation_score,target=target)
 		reg = linear_model.LinearRegression()
@@ -41,6 +51,7 @@ for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 		variable_selections = [[],]
 		selection_scores = np.zeros(n_v+1)
 		selection_se = np.zeros(n_v+1)
+
 		# forward stepwise variable selection with cross-validation
 		for step in range(n_v):
 			scores = np.zeros(n_v-step)
@@ -48,9 +59,10 @@ for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 				model_variables = variable_selections[-1].copy()
 				model_variables.append(variable)
 				X_subset = np.array([X[:,v] for v in model_variables]).T
-				# groupwise cross-validation if cross-country Sh, otherwise 5-fold
+
+				# groupwise cross-validation if between-country Sh, otherwise 5-fold
 				if validation_approach=="Fixed":
-					fold = np.loadtxt(folder+"Data/"+"FixedTrain_Data/"+trainset+"_fold.csv",delimiter=',')
+					fold = np.loadtxt(folder+"FixedTrain_Data/"+trainset+"_fold.csv",delimiter=',')
 					ps = model_selection.PredefinedSplit(test_fold=fold)
 					scores[np.where(variable_pool==variable)[0]] = np.mean(
 						model_selection.cross_val_score(reg,X_subset,y
@@ -67,6 +79,8 @@ for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 						model_selection.cross_val_score(reg,X_subset,y
 							,cv=5,scoring=scorer)
 						)
+
+			# store information about variables used
 			variable_add = variable_pool[np.argmax(scores)]
 			variable_pool = np.delete(variable_pool,np.argmax(scores))
 			selection_scores[step+1]=np.max(scores)
@@ -74,11 +88,12 @@ for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 			best_set = variable_selections[-1].copy()
 			best_set.append(variable_add)
 			variable_selections.append(best_set)
+
 		# selection_scores[0] = np.maximum(validation_score(y,np.zeros(len(y)),target)
 		# 	,validation_score(y,np.ones(len(y )),target))
 		best_selection_score = selection_scores.max()
 		if plot:
-		# Figures
+			# Create diagnostic plots
 			fig, ax = plt.subplots()
 			best_index = selection_scores.argmax()
 			parsimony_biases = [0.01,0.02,selection_se[best_index]]
@@ -98,44 +113,50 @@ for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 			ax.set_title(trainset+' linear regression')
 			ax.set_xlabel('# variables')
 			ax.set_xticks(range(0,n_v,2))
-			plt.savefig(folder+"Models/"+var+val+validation_approach+"Trained_Models/LinearRegression_"
+			plt.savefig(folder+var+val+validation_approach+"Trained_Models/LinearRegression_"
 					+trainset+"_"+target.replace(' ','_')+"_figure.png")
 			plt.close()
-		# Save model
+
+		# choose parsimony biased model
 		best_biased_index = next(i for i,v in enumerate(selection_scores) 
 			if v >= best_selection_score-parsimony_bias)
-		if best_biased_index == n_v:
-			best_biased_index = next(i for i,v in enumerate(selection_scores) 
-			if v >= best_selection_score-parsimony_bias*2)
 		best_biased_subset = variable_selections[best_biased_index]
 		X_best_biased_subset = np.array([X[:,v] for v in best_biased_subset]).T
 		reg_fit = reg.fit(X_best_biased_subset,y)
 		y_pred = reg_fit.predict(X_best_biased_subset)
 		best_biased_score = validation_score(y,y_pred,target)
-		# edit regressor to take full set of variables
+
+		# edit regressor to take full set of variables,
+		# so it can be included in the ensemble
 		full_coefs = np.zeros(len(variables))
 		for i in range(len(best_biased_subset)):
 			full_coefs[best_biased_subset[i]] = reg_fit.coef_[i]
 		reg_fit.coef_=full_coefs
 		reg_fit.n_features_in_=len(full_coefs)
 
+		# note coefficients and add intercept
 		coefs = list(reg_fit.coef_)
 		coefs.insert(0,reg_fit.intercept_)
 		subset_names = [variables[i] for i in best_biased_subset]
 		subset_names.insert(0,'Intercept')
-		with open(folder+"Models/"+var+val+validation_approach+"Trained_Models/LinearRegression_"
+
+		# save score
+		with open(folder+var+val+validation_approach+"Trained_Models/LinearRegression_"
 			+trainset+"_"+target.replace(' ','_')+"_score.txt",'w') as wfile:
 			wfile.write('%f' % best_biased_score)
-		with open(folder+"Models/"+var+val+validation_approach+"Trained_Models/LinearRegression_"
+		# save coefficients
+		with open(folder+var+val+validation_approach+"Trained_Models/LinearRegression_"
 			+trainset+"_"+target.replace(' ','_')+".csv",'w') as wfile:
 			writer = csv.writer(wfile)
 			writer.writerow(subset_names)
 			writer.writerow(coefs)
 			writer.writerow([best_biased_score])
-		with open(folder+"Models/"+var+val+validation_approach+"Trained_Models/LinearRegression_"
+		# save pickled model
+		with open(folder+var+val+validation_approach+"Trained_Models/LinearRegression_"
 			+trainset+"_"+target.replace(' ','_')+"_fit.pickle",'wb') as wfile:
 			pkl.dump(reg_fit,wfile)
-		with open(folder+"Models/"+var+val+validation_approach+"Trained_Models/LinearRegression_"
+		# save list of variables used
+		with open(folder+var+val+validation_approach+"Trained_Models/LinearRegression_"
 			+trainset+"_"+target.replace(' ','_')+"_variables.csv",'w') as wfile:
 			writer = csv.writer(wfile)
 			writer.writerow(subset_names[1:])
