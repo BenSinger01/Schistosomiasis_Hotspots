@@ -2,10 +2,8 @@ import pandas as pd
 import numpy as np
 import sys
 
+# load control variables from command line
 folder, seed, validation_approach = sys.argv[1], int(sys.argv[2]), sys.argv[3]
-
-# folder = ''
-# seed = 220516
 
 if validation_approach=="Fixed":
 	train_prop = 0.8
@@ -20,6 +18,7 @@ all_data = pd.read_csv("Data/all_hotspot_prediction_data.csv",index_col=[0])
 
 np.random.seed(seed)
 
+# within-country splits
 for country in ["NIG","MOZ","COT","KEN","TAN"]:
 	n = all_data[all_data["Country_Code"]==country].shape[0]
 	test_choice = np.random.choice(range(n), size=int(n*test_prop), replace=False)    
@@ -39,7 +38,7 @@ for country in ["NIG","MOZ","COT","KEN","TAN"]:
 		fold[val_choice] = 0
 		np.savetxt(folder+"Data/"+"FixedTrain_Data/"+country+"_fold.csv",fold,fmt='%1i')
 
-
+# between-country split between Niger and Mozambique
 train = all_data[all_data["Country_Code"]=="NIG"]
 train.to_csv(folder+"Data/"+validation_approach+"Train_Data/all_NIG.csv")
 test = all_data[all_data["Country_Code"]=="MOZ"]
@@ -51,6 +50,7 @@ if validation_approach=="Fixed":
 	fold[val_choice] = 0
 	np.savetxt(folder+"Data/"+"FixedTrain_Data/all_NIG_fold.csv",fold,fmt='%1i')
 
+# between-country splits for S. mansoni endemic countries
 for country1,country2 in [("COT","KEN"),("KEN","TAN"),("TAN","COT")]:
 	train = all_data[(all_data["Country_Code"]==country1)|(all_data["Country_Code"]==country2)]
 	train.to_csv(folder+"Data/"+validation_approach+"Train_Data/all_"+country1+country2+".csv")
@@ -63,7 +63,7 @@ for country1,country2 in [("COT","KEN"),("KEN","TAN"),("TAN","COT")]:
 		fold[val_choice] = 0
 		np.savetxt(folder+"Data/"+"FixedTrain_Data/all_"+country1+country2+"_fold.csv",fold,fmt='%1i')
 
-
+# combined-country splits
 for species in ["Sh","Sm"]:
 	n = all_data[all_data["Species"]==species].shape[0]
 	test_choice = np.random.choice(range(n), size=int(n*test_prop), replace=False)    
