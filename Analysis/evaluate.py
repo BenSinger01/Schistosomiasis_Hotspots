@@ -8,8 +8,8 @@ import variable_func
 import csv
 import sys
 
-model, trainset, outcome, p_value, folder, var, val, validation_approach =\
- sys.argv[1], sys.argv[2], sys.argv[3], float(sys.argv[4]), sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8]
+model, trainset, outcome, p_value, folder, var, validation_approach =\
+ sys.argv[1], sys.argv[2], sys.argv[3], float(sys.argv[4]), sys.argv[5], sys.argv[6], sys.argv[7]
 
 variable_func = eval('variable_func.'+var+'variable_func')
 
@@ -55,14 +55,14 @@ hotspot = ["Outcome","Outcome","Outcome","Outcome","Outcome","Outcome","Outcome"
 ,'LogisticRegression','ElasticNetLogistic','RandomForestClassifier','GradientBoostingClassifier','XGBoostClassifier','SupportVectorClassifier','MultilayerPerceptronClassifier','EnsembleClassifier','SelectEnsembleClassifier']
 .index(model)]
 target = outcome+' '+hotspot
-filename = folder+var+val+validation_approach+'Trained_Models/'+model+'_'+trainset+'_'+outcome.replace(' ','_')+'_'+hotspot+'_fit.pickle'
+filename = folder+"Outputs"+var+validation_approach+'Trained_Models/'+model+'_'+trainset+'_'+outcome.replace(' ','_')+'_'+hotspot+'_fit.pickle'
 variables = variable_func(trainset)
 with open(filename,'rb') as pklfile:
 	reg_fit = pkl.load(pklfile)
-data = pd.read_csv(folder+validation_approach+"Test_Data/"+testset+".csv")
+data = pd.read_csv(folder+"Data/"+validation_approach+"Test_Data/"+testset+".csv")
 X_unscaled = data[variables]
 y_true = np.array(data[target])
-with open(folder+validation_approach+"Train_Data/"+trainset+"_"+var+"scaler.pickle",'rb') as pklfile:
+with open(folder+"Data/"+validation_approach+"Train_Data/"+trainset+"_"+var+"scaler.pickle",'rb') as pklfile:
 	scaler = pkl.load(pklfile)
 X = scaler.transform(X_unscaled)
 

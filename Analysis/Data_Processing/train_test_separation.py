@@ -14,7 +14,7 @@ else:
 	val_prop = 0
 	test_prop = 0.3
 
-all_data = pd.read_csv("Data/all_hotspot_prediction_data.csv",index_col=[0])
+all_data = pd.read_csv("../Data/all_hotspot_prediction_data.csv",index_col=[0])
 
 np.random.seed(seed)
 

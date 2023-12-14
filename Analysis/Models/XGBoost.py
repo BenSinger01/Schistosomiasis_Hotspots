@@ -6,6 +6,7 @@ import xgboost as xgb
 import pickle as pkl
 import csv
 import sys
+sys.path.append('Analysis')
 import variable_func
 import validation_score
 from matplotlib import pyplot as plt
@@ -13,7 +14,8 @@ from matplotlib import pyplot as plt
 np.random.seed(230710)
 
 # load control variables from command line
-folder, var, val, validation_approach, plot = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], bool(int(sys.argv[5]))
+folder, var, validation_approach, plot = sys.argv[1], sys.argv[2], sys.argv[3], bool(int(sys.argv[4]))
+clas_targets=["Prevalence Hotspot","Prevalence Relative Hotspot","Prevalence Intensity Hotspot"]
 clas_targets=["Prevalence Hotspot","Prevalence Relative Hotspot","Prevalence Intensity Hotspot"]
 reg_targets=["Prevalence Outcome"]
 if var == "true_":
@@ -21,7 +23,7 @@ if var == "true_":
 	reg_targets = ["True Prevalence Outcome","Prevalence Outcome"]
 
 variable_func = eval('variable_func.'+var+'variable_func')
-validation_score = eval('validation_score.'+val+'validation_score')
+validation_score = validation_score.validation_score
 
 # define hyperparameter search
 search_params = {
@@ -90,20 +92,20 @@ for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 			# label axes
 			ax.set_ylabel(list(search_params.keys())[0])
 			ax.set_xlabel(list(search_params.keys())[1])
-			plt.savefig(folder+"Outputs/"+var+val+validation_approach+"Trained_Models/GradientBoostingRegressor_"
+			plt.savefig(folder+"Outputs/"+var+validation_approach+"Trained_Models/GradientBoostingRegressor_"
 				+trainset+"_"+target.replace(' ','_')+"_CV_Heatmap.png")
 			plt.close()
 
 		# save score
-		with open(folder+"Outputs/"+var+val+validation_approach+"Trained_Models/GradientBoostingRegressor_"
+		with open(folder+"Outputs/"+var+validation_approach+"Trained_Models/GradientBoostingRegressor_"
 			+trainset+"_"+target.replace(' ','_')+"_score.txt",'w') as wfile:
 			wfile.write('%f' % reg_score)
 		# save pickled model
-		with open(folder+"Outputs/"+var+val+validation_approach+"Trained_Models/GradientBoostingRegressor_"
+		with open(folder+"Outputs/"+var+validation_approach+"Trained_Models/GradientBoostingRegressor_"
 			+trainset+"_"+target.replace(' ','_')+"_fit.pickle",'wb') as wfile:
 			pkl.dump(reg_fit,wfile)
 		# save search
-		with open(folder+"Outputs/"+var+val+validation_approach+"Trained_Models/GradientBoostingRegressor_"
+		with open(folder+"Outputs/"+var+validation_approach+"Trained_Models/GradientBoostingRegressor_"
 			+trainset+"_"+target.replace(' ','_')+"_search.pickle",'wb') as wfile:
 			pkl.dump(search_fit,wfile)
 
@@ -120,18 +122,18 @@ for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 					fold = np.loadtxt(folder+"Data/"+"FixedTrain_Data/"+trainset+"_fold.csv",delimiter=',')
 					ps = model_selection.PredefinedSplit(test_fold=fold)
 					search = model_selection.GridSearchCV(clas,param_grid=search_params
-						,scoring=val+"accuracy"
+						,scoring="accuracy"
 						,cv=ps)
 					search_fit = search.fit(X,y)
 		elif len(trainset)>7:
 			search = model_selection.GridSearchCV(clas,param_grid=search_params
-				,scoring=val+"accuracy"
+				,scoring="accuracy"
 				,cv=model_selection.LeaveOneGroupOut())
 			search_fit = search.fit(X,y
 				,groups=country_indicator)
 		else:
 			search = model_selection.GridSearchCV(clas,param_grid=search_params
-				,scoring=val+"accuracy"
+				,scoring="accuracy"
 				,cv=5)
 			search_fit = search.fit(X,y)
 		clas_fit = search_fit.best_estimator_
@@ -150,19 +152,19 @@ for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 			# label axes
 			ax.set_ylabel(list(search_params.keys())[0])
 			ax.set_xlabel(list(search_params.keys())[1])
-			plt.savefig(folder+"Outputs/"+var+val+validation_approach+"Trained_Models/GradientBoostingClassifier_"
+			plt.savefig(folder+"Outputs/"+var+validation_approach+"Trained_Models/GradientBoostingClassifier_"
 				+trainset+"_"+target.replace(' ','_')+"_CV_Heatmap.png")
 			plt.close()
 
 		# save score
-		with open(folder+"Outputs/"+var+val+validation_approach+"Trained_Models/GradientBoostingClassifier_"
+		with open(folder+"Outputs/"+var+validation_approach+"Trained_Models/GradientBoostingClassifier_"
 			+trainset+"_"+target.replace(' ','_')+"_score.txt",'w') as wfile:
 			wfile.write('%f' % clas_score)
 		# save pickled model
-		with open(folder+"Outputs/"+var+val+validation_approach+"Trained_Models/GradientBoostingClassifier_"
+		with open(folder+"Outputs/"+var+validation_approach+"Trained_Models/GradientBoostingClassifier_"
 			+trainset+"_"+target.replace(' ','_')+"_fit.pickle",'wb') as wfile:
 			pkl.dump(clas_fit,wfile)
 		# save search
-		with open(folder+"Outputs/"+var+val+validation_approach+"Trained_Models/GradientBoostingClassifier_"
+		with open(folder+"Outputs/"+var+validation_approach+"Trained_Models/GradientBoostingClassifier_"
 			+trainset+"_"+target.replace(' ','_')+"_search.pickle",'wb') as wfile:
 			pkl.dump(search_fit,wfile)

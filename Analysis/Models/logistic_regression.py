@@ -6,6 +6,7 @@ from sklearn import linear_model
 import pickle as pkl
 import csv
 import sys
+sys.path.append('Analysis')
 import matplotlib.pyplot as plt
 import variable_func
 import validation_score
@@ -13,13 +14,13 @@ import validation_score
 np.random.seed(230803)
 
 # load control variables from command line
-folder, var, val, validation_approach, plot = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], bool(int(sys.argv[5]))
+folder, var, validation_approach, plot = sys.argv[1], sys.argv[2], sys.argv[3], bool(int(sys.argv[4]))
 clas_targets=["Prevalence Hotspot","Prevalence Relative Hotspot","Prevalence Intensity Hotspot"]
 if var == "true_":
 	clas_targets=["True Prevalence Hotspot","True Prevalence Relative Hotspot","True Prevalence Intensity Hotspot","Prevalence Hotspot","Prevalence Relative Hotspot","Prevalence Intensity Hotspot"]
 
 variable_func = eval('variable_func.'+var+'variable_func')
-validation_score = eval('validation_score.'+val+'validation_score')
+validation_score = validation_score.validation_score
 
 parsimony_bias = 0.01
 
@@ -69,18 +70,18 @@ for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 					ps = model_selection.PredefinedSplit(test_fold=fold)
 					scores[np.where(variable_pool==variable)[0]] = np.mean(
 						model_selection.cross_val_score(reg,X_subset,y
-							,cv=ps,scoring=val+"accuracy")
+							,cv=ps,scoring="accuracy")
 						)
 				elif len(trainset)>7:
 					scores[np.where(variable_pool==variable)[0]] = np.mean(
 						model_selection.cross_val_score(reg,X_subset,y
 							,cv=model_selection.LeaveOneGroupOut()
-							,groups=country_indicator,scoring=val+'accuracy')
+							,groups=country_indicator,scoring='accuracy')
 						)
 				else:
 					scores[np.where(variable_pool==variable)[0]] = np.mean(
 						model_selection.cross_val_score(reg,X_subset,y
-							,cv=5,scoring=val+'accuracy')
+							,cv=5,scoring='accuracy')
 						)
 
 			# store information about variables used
@@ -115,7 +116,7 @@ for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 			ax.set_title(trainset+' logistic regression')
 			ax.set_xlabel('# variables')
 			ax.set_xticks(range(0,n_v,2))
-			plt.savefig(folder+"Outputs/"+var+val+validation_approach+"Trained_Models/LogisticRegression_"
+			plt.savefig(folder+"Outputs/"+var+validation_approach+"Trained_Models/LogisticRegression_"
 				+trainset+"_"+target.replace(' ','_')+"_figure.png")
 			plt.close()
 
@@ -146,22 +147,22 @@ for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 		subset_names.insert(0,'Intercept')
 
 		# save score
-		with open(folder+"Outputs/"+var+val+validation_approach+"Trained_Models/LogisticRegression_"
+		with open(folder+"Outputs/"+var+validation_approach+"Trained_Models/LogisticRegression_"
 			+trainset+"_"+target.replace(' ','_')+"_score.txt",'w') as wfile:
 			wfile.write('%f' % best_biased_score)
 		# save coefficients
-		with open(folder+"Outputs/"+var+val+"Trained_Models/LogisticRegression_"
+		with open(folder+"Outputs/"+var+"Trained_Models/LogisticRegression_"
 			+trainset+"_"+target.replace(' ','_')+".csv",'w') as wfile:
 			writer = csv.writer(wfile)
 			writer.writerow(subset_names)
 			writer.writerow(coefs)
 			writer.writerow([best_biased_score])
 		# save pickled model
-		with open(folder+"Outputs/"+var+val+validation_approach+"Trained_Models/LogisticRegression_"
+		with open(folder+"Outputs/"+var+validation_approach+"Trained_Models/LogisticRegression_"
 			+trainset+"_"+target.replace(' ','_')+"_fit.pickle",'wb') as wfile:
 			pkl.dump(reg_fit,wfile)
 		# save list of variables used
-		with open(folder+"Outputs/"+var+val+validation_approach+"Trained_Models/LogisticRegression_"
+		with open(folder+"Outputs/"+var+validation_approach+"Trained_Models/LogisticRegression_"
 			+trainset+"_"+target.replace(' ','_')+"_variables.csv",'w') as wfile:
 			writer = csv.writer(wfile)
 			writer.writerow(subset_names[1:])

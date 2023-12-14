@@ -6,6 +6,7 @@ from sklearn import linear_model
 import pickle as pkl
 import csv
 import sys
+sys.path.append('Analysis')
 import matplotlib.pyplot as plt
 import variable_func
 import validation_score
@@ -13,12 +14,12 @@ import validation_score
 np.random.seed(230803)
 
 # load control variables from command line
-folder, var, val, validation_approach, plot = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], bool(int(sys.argv[5]))
+folder, var, validation_approach, plot = sys.argv[1], sys.argv[2], sys.argv[3], bool(int(sys.argv[4]))
 reg_targets=["Prevalence Outcome"]
 if var == "true_":
 	reg_targets = ["True Prevalence Outcome","Prevalence Outcome"]
 variable_func = eval('variable_func.'+var+'variable_func')
-validation_score = eval('validation_score.'+val+'validation_score')
+validation_score = validation_score.validation_score
 
 parsimony_bias = 0.01
 
@@ -28,14 +29,14 @@ for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 ,"all_COTKEN","all_KENTAN","all_TANCOT"]:
 
 	# load data and variables
-	data = pd.read_csv(folder+validation_approach+"Train_Data/"+trainset+".csv")
+	data = pd.read_csv(folder+"Data/"+validation_approach+"Train_Data/"+trainset+".csv")
 	country_indicator =\
 	 [item==data["Country_Code"].iloc[0] for item in data["Country_Code"]]
 	variables = variable_func(trainset)
 	X_unscaled = data[variables]
 
 	# scale variables
-	with open(folder+validation_approach+"Train_Data/"+trainset+"_"+var+"scaler.pickle",'rb') as pklfile:
+	with open(folder+"Data/"+validation_approach+"Train_Data/"+trainset+"_"+var+"scaler.pickle",'rb') as pklfile:
 		scaler = pkl.load(pklfile)
 	X = scaler.transform(X_unscaled)
 
@@ -62,7 +63,7 @@ for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 
 				# groupwise cross-validation if between-country Sh, otherwise 5-fold
 				if validation_approach=="Fixed":
-					fold = np.loadtxt(folder+"FixedTrain_Data/"+trainset+"_fold.csv",delimiter=',')
+					fold = np.loadtxt(folder+"Data/"+"FixedTrain_Data/"+trainset+"_fold.csv",delimiter=',')
 					ps = model_selection.PredefinedSplit(test_fold=fold)
 					scores[np.where(variable_pool==variable)[0]] = np.mean(
 						model_selection.cross_val_score(reg,X_subset,y
@@ -113,7 +114,7 @@ for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 			ax.set_title(trainset+' linear regression')
 			ax.set_xlabel('# variables')
 			ax.set_xticks(range(0,n_v,2))
-			plt.savefig(folder+var+val+validation_approach+"Trained_Models/LinearRegression_"
+			plt.savefig(folder+"Outputs/"+var+validation_approach+"Trained_Models/LinearRegression_"
 					+trainset+"_"+target.replace(' ','_')+"_figure.png")
 			plt.close()
 
@@ -141,22 +142,22 @@ for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 		subset_names.insert(0,'Intercept')
 
 		# save score
-		with open(folder+var+val+validation_approach+"Trained_Models/LinearRegression_"
+		with open(folder+"Outputs"+var+validation_approach+"Trained_Models/LinearRegression_"
 			+trainset+"_"+target.replace(' ','_')+"_score.txt",'w') as wfile:
 			wfile.write('%f' % best_biased_score)
 		# save coefficients
-		with open(folder+var+val+validation_approach+"Trained_Models/LinearRegression_"
+		with open(folder+"Outputs"+var+validation_approach+"Trained_Models/LinearRegression_"
 			+trainset+"_"+target.replace(' ','_')+".csv",'w') as wfile:
 			writer = csv.writer(wfile)
 			writer.writerow(subset_names)
 			writer.writerow(coefs)
 			writer.writerow([best_biased_score])
 		# save pickled model
-		with open(folder+var+val+validation_approach+"Trained_Models/LinearRegression_"
+		with open(folder+"Outputs"+var+validation_approach+"Trained_Models/LinearRegression_"
 			+trainset+"_"+target.replace(' ','_')+"_fit.pickle",'wb') as wfile:
 			pkl.dump(reg_fit,wfile)
 		# save list of variables used
-		with open(folder+var+val+validation_approach+"Trained_Models/LinearRegression_"
+		with open(folder+"Outputs"+var+validation_approach+"Trained_Models/LinearRegression_"
 			+trainset+"_"+target.replace(' ','_')+"_variables.csv",'w') as wfile:
 			writer = csv.writer(wfile)
 			writer.writerow(subset_names[1:])

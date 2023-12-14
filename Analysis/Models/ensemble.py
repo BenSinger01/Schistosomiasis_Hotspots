@@ -5,13 +5,14 @@ import numpy as np
 from sklearn import ensemble
 from sklearn import linear_model
 import sys
+sys.path.append('Analysis')
 import variable_func
 import validation_score
 
 np.random.seed(230803)
 
 # load control variables from command line
-folder, var, val, validation_approach = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+folder, var, validation_approach, plot = sys.argv[1], sys.argv[2], sys.argv[3], bool(int(sys.argv[4]))
 clas_targets=["Prevalence Hotspot","Prevalence Relative Hotspot","Prevalence Intensity Hotspot"]
 reg_targets=["Prevalence Outcome"]
 if var == "true_":
@@ -44,7 +45,7 @@ for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 		,'SupportVectorRegressor','MultilayerPerceptronRegressor']
 		estimators = []
 		for model in reg_models:
-			with open(folder+"Outputs"+var+val+validation_approach+"Trained_Models/"+model+"_"
+			with open(folder+"Outputs"+var+validation_approach+"Trained_Models/"+model+"_"
 				+trainset+"_"+target.replace(' ','_')+"_fit.pickle",'rb') as rfile:
 				reg_fit = pkl.load(rfile)
 				estimators.append((model,reg_fit))
@@ -55,7 +56,7 @@ for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 		vot_reg_fit = vot_reg.fit(X,y)
 
 		# save pickled model
-		with open(folder+"Outputs"+var+val+validation_approach+"Trained_Models/EnsembleRegressor_"
+		with open(folder+"Outputs"+var+validation_approach+"Trained_Models/EnsembleRegressor_"
 			+trainset+"_"+target.replace(' ','_')+"_fit.pickle",'wb') as wfile:
 			pkl.dump(vot_reg_fit,wfile)
 
@@ -68,7 +69,7 @@ for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 		,'SupportVectorClassifier','MultilayerPerceptronClassifier']
 		estimators = []
 		for model in clas_models:
-			with open(folder+"Outputs"+var+val+validation_approach+"Trained_Models/"+model+"_"
+			with open(folder+"Outputs"+var+validation_approach+"Trained_Models/"+model+"_"
 				+trainset+"_"+target.replace(' ','_')+"_fit.pickle",'rb') as rfile:
 				reg_fit = pkl.load(rfile)
 				estimators.append((model,reg_fit))
@@ -79,6 +80,6 @@ for trainset in ["NIG","KEN","TAN","Sm","Sh","all_NIG"
 		vot_reg_fit = vot_reg.fit(X,y)
 
 		# save pickled model
-		with open(folder+"Outputs"+var+val+validation_approach+"Trained_Models/EnsembleClassifier_"
+		with open(folder+"Outputs"+var+validation_approach+"Trained_Models/EnsembleClassifier_"
 			+trainset+"_"+target.replace(' ','_')+"_fit.pickle",'wb') as wfile:
 			pkl.dump(vot_reg_fit,wfile)

@@ -4,17 +4,17 @@ from matplotlib import pyplot as plt
 from matplotlib import rc
 import sys
 
-filename, metric, model, folder, var, val, validation_approach = sys.argv[1:]
+filename, metric, model, folder, var, validation_approach = sys.argv[1:]
 
 plt.rcParams['font.size'] = '11'
 rc('font',**{'family':'serif','serif':['Palatino']})
 rc('text',usetex=True)
 
-n_KEN = pd.read_csv(folder+validation_approach+"Test_Data/KEN.csv").shape[0]
-n_TAN = pd.read_csv(folder+validation_approach+"Test_Data/TAN.csv").shape[0]
-n_KENTAN = pd.read_csv(folder+validation_approach+"Test_Data/all_COT.csv").shape[0]
-n_TANCOT = pd.read_csv(folder+validation_approach+"Test_Data/all_KEN.csv").shape[0]
-n_COTKEN = pd.read_csv(folder+validation_approach+"Test_Data/all_TAN.csv").shape[0]
+n_KEN = pd.read_csv(folder+"Data/"+validation_approach+"Test_Data/KEN.csv").shape[0]
+n_TAN = pd.read_csv(folder+"Data/"+validation_approach+"Test_Data/TAN.csv").shape[0]
+n_KENTAN = pd.read_csv(folder+"Data/"+validation_approach+"Test_Data/all_COT.csv").shape[0]
+n_TANCOT = pd.read_csv(folder+"Data/"+validation_approach+"Test_Data/all_KEN.csv").shape[0]
+n_COTKEN = pd.read_csv(folder+"Data/"+validation_approach+"Test_Data/all_TAN.csv").shape[0]
 
 scores = pd.read_csv(filename)
 scores = scores[scores['Metric']==metric]
@@ -70,4 +70,4 @@ fig.subplots_adjust(right=0.8)
 cbar_ax = fig.add_axes([0.85, 0.15, 0.02, 0.7])
 plt.colorbar(image,cax=cbar_ax,label='Balanced accuracy')
 fig.text(0.465, 0.1, 'Test set', ha='center')
-plt.savefig(folder+"Figures/"+var+val+validation_approach+'task_heatplots_'+metric+model+'.png',dpi=300)
+plt.savefig(folder+"Figures/"+var+validation_approach+'task_heatplots_'+metric+model+'.png',dpi=300)
