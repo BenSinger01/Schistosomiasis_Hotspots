@@ -3,7 +3,7 @@
 ## Summary
 This repository contains analytic code related our study on statistical models to predict hotspots of schistosomiasis. This code implements statistical models to predict hotspots at baseline prior to treatment comparing three common hotspot definitions, using epidemiologic, survey-based, and remote sensing data. The analysis also includes model evaluation according to various metrics, including three alternate ways to construct the test set. Finally, we include code to reproduce the figures and tables in the associated publication.
 
-The data used for this analysis is publicly available, but due to liscensing issues cannot be made available through this repository. Please see the associated publication for more information on the data sources used.
+The data used for this analysis is available through various public repositories, some of which require a formal request for data. Therefore we cannot make all data for this analysis available through this repository. Please see the associated publication for more information on the data sources used.
 
 The study is now published in PNAS and available here **link placeholder**.
 
