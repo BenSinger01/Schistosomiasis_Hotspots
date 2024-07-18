@@ -5,9 +5,9 @@ This repository contains analytic code related our study on statistical models t
 
 The data used for this analysis is available through various public repositories, some of which require a formal request for data. Therefore we cannot make all data for this analysis available through this repository. Please see the associated publication for more information on the data sources used.
 
-The study is now published in PNAS and available here **link placeholder**.
+The study is now published in [PNAS](https://doi.org/10.1073/pnas.2315463120).
 
-The full citation for the article is: **citation placeholder**
+The full citation for the article is: Benjamin J. Singer, Jean T. Coulibaly, Hailey J. Park, Jason R. Andrews, Isaac I. Bogoch, and Nathan C. Lo. Development of prediction models to identify hotspots of schistosomiasis in endemic regions to guide mass drug administration. Proceedings of the National Academy of Sciences, 121 (2) e2315463120, 2024. doi: 10.1073/pnas.2315463120
 
 This code was written and tested using Python version 3.9.7 and Scikit-learn version 1.1.1.
 
